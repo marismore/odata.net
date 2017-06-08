@@ -365,7 +365,12 @@ namespace Microsoft.OData.Edm.Csdl.Parsing.Common
 
                 if (!this.currentScope.Parser.TryGetChildElementParser(elementName, out newParser))
                 {
-                    this.ReportUnexpectedElement(this.Location, this.reader.Name);
+                    // Don't error on unexpected annotations, just ignore
+                    if (elementName != CsdlConstants.Element_Annotation)
+                    {
+                        this.ReportUnexpectedElement(this.Location, this.reader.Name);
+                    }
+
                     if (!emptyElement)
                     {
                         int depth = reader.Depth;
@@ -393,7 +398,12 @@ namespace Microsoft.OData.Edm.Csdl.Parsing.Common
                 // otherwise we assume that this is either a valid 'any' element or that the xsd validator has generated an error
                 if (string.IsNullOrEmpty(elementNamespace) || this.IsOwnedNamespace(elementNamespace))
                 {
-                    this.ReportUnexpectedElement(this.Location, this.reader.Name);
+                    // Don't error on unexpected annotations, just ignore
+                    if (elementName != CsdlConstants.Element_Annotation)
+                    {
+                        this.ReportUnexpectedElement(this.Location, this.reader.Name);
+                    }
+
                     this.reader.Skip();
                 }
                 else
@@ -493,11 +503,7 @@ namespace Microsoft.OData.Edm.Csdl.Parsing.Common
 
         private void ReportUnexpectedElement(CsdlLocation errorLocation, string elementName)
         {
-            // Don't error on unexpected annotations, just ignore
-            if (elementName != CsdlConstants.Element_Annotation)
-            {
-                this.ReportError(errorLocation, EdmErrorCode.UnexpectedXmlElement, Edm.Strings.XmlParser_UnexpectedElement(elementName));
-            }
+            this.ReportError(errorLocation, EdmErrorCode.UnexpectedXmlElement, Edm.Strings.XmlParser_UnexpectedElement(elementName));
         }
 
         private void ReportUnusedElement(CsdlLocation errorLocation, string elementName)

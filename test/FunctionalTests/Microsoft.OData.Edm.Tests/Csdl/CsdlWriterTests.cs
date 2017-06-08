@@ -459,6 +459,53 @@ namespace Microsoft.OData.Edm.Tests.Csdl
 
         #endregion
 
+        #region Optional Parameters
+
+        [Fact]
+        public void ShouldWriteOptionalParameters()
+        {
+            string expected =
+        "<edmx:Edmx xmlns:edmx=\"http://docs.oasis-open.org/odata/ns/edmx\" Version=\"4.0\">" +
+          "<edmx:DataServices>" +
+            "<Schema xmlns=\"http://docs.oasis-open.org/odata/ns/edm\" Namespace=\"test\">" +
+              "<Function Name=\"TestFunction\">" +
+                "<Parameter Name = \"requiredParam\" Type=\"Edm.String\"/>" +
+                "<Parameter Name = \"optionalParam\" Type=\"Edm.String\">" +
+                    "<Annotation Term=\"Org.OData.Core.V1.OptionalParameter\"/>" +
+                "</Parameter>" +
+                "<Parameter Name = \"optionalParamWithDefault\" Type=\"Edm.String\">" +
+                    "<Annotation Term=\"Org.OData.Core.V1.OptionalParameter\">" +
+                      "<Record>" +
+                        "<PropertyValue Property=\"DefaultValue\" String=\"Smith\"/>" +
+                      "</Record>" +
+                    "</Annotation>" +
+                "</Parameter>" +
+                "<ReturnType Type=\"Edm.Boolean\"/>" +
+              "</Function>" +
+              "<EntityContainer Name=\"Default\">" +
+                "<FunctionImport Name=\"TestFunction\" Function=\"test.TestFunction\"/>" +
+              "</EntityContainer>" +
+            "</Schema>" +
+          "</edmx:DataServices>" +
+        "</edmx:Edmx>";
+
+            var stringTypeReference = new EdmStringTypeReference(EdmCoreModel.Instance.GetPrimitiveType(EdmPrimitiveTypeKind.String), false);
+            var model = new EdmModel();
+            var function = new EdmFunction("test", "TestFunction", stringTypeReference);
+            var requiredParam = new EdmOperationParameter(function, "requiredParam", stringTypeReference);
+            var optionalParam = new EdmOptionalParameter(function, "optionalParam", stringTypeReference, null);
+            var optionalParamWithDefault = new EdmOptionalParameter(function, "optionalParamWithDefault", stringTypeReference, "Smith");
+            function.AddParameter(requiredParam);
+            function.AddParameter(optionalParam);
+            function.AddParameter(optionalParamWithDefault);
+            model.AddElement(function);
+            model.AddEntityContainer("test", "Default").AddFunctionImport("TestFunction", function);
+            string csdlStr = GetCsdl(model, CsdlTarget.OData);
+            Assert.Equal(expected, csdlStr);
+        }
+
+        #endregion
+
         private string GetCsdl(IEdmModel model, CsdlTarget target)
         {
             string edmx = string.Empty;
